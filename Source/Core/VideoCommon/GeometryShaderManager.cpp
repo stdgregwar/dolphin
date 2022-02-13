@@ -49,8 +49,11 @@ void GeometryShaderManager::SetConstants()
     s_projection_changed = false;
 
     constants.stereoparams.fill(0);
-
-    if (true || xfmem.projection.type == GX_PERSPECTIVE)
+#if USE_OPENXR
+    if (g_renderer->GetOpenXRSession() || xfmem.projection.type == GX_PERSPECTIVE)
+#else
+    if (xfmem.projection.type == GX_PERSPECTIVE)
+#endif
     {
 #if USE_OPENXR
       if (auto* const openxr_session = g_renderer->GetOpenXRSession())
