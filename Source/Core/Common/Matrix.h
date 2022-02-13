@@ -371,6 +371,9 @@ public:
   static Matrix44 FromArray(const std::array<float, 16>& arr);
 
   static Matrix44 Translate(const Vec3& vec);
+  static Matrix44 ForceZ(const float z);
+  void UseFixedZ(const float z);
+  void ForceW(const float w);
   static Matrix44 Shear(const float a, const float b = 0);
   static Matrix44 Perspective(float fov_y, float aspect_ratio, float z_near, float z_far);
   static Matrix44 Frustum(float left, float right, float bottom, float top, float near, float far);

@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include <cstring>
+#include <cmath>
 
 #include "Common/ChunkFile.h"
 #include "Common/CommonTypes.h"
@@ -49,7 +50,7 @@ void GeometryShaderManager::SetConstants()
 
     constants.stereoparams.fill(0);
 
-    if (xfmem.projection.type == GX_PERSPECTIVE)
+    if (true || xfmem.projection.type == GX_PERSPECTIVE)
     {
 #if USE_OPENXR
       if (auto* const openxr_session = g_renderer->GetOpenXRSession())
@@ -63,12 +64,32 @@ void GeometryShaderManager::SetConstants()
 
         // Use the game's near and far values.
         const float z_near = projection.data[11] / (projection.data[10] - 1);
-        const float z_far = projection.data[11] / (projection.data[10] + 1);
+       float z_far = projection.data[11] / (projection.data[10] + 1);
+
+
+        // GX_ORTHOGRAPHIC projection matrices have an infinity far plane.
+
 
         int eye_index = 0;
         for (auto& eye_view : constants.eye_views)
         {
-          eye_view = openxr_session->GetEyeViewMatrix(eye_index, z_near, z_far) * inv_projection;
+          if (xfmem.projection.type == GX_PERSPECTIVE)
+            eye_view = openxr_session->GetEyeViewMatrix(eye_index, z_near, z_far) * inv_projection;
+            ///eye_view = projection * openxr_session->GetEyeViewOnlyMatrix(eye_index) * inv_projection;
+          else
+          {
+            // eye_view =  openxr_session->GetEyeViewOnlyMatrix(eye_index);
+            // eye_view = openxr_session->GetEyeViewMatrix(eye_index, 100.0f, -100.0f) *
+            //           inv_projection;
+            // eye_view = Common::Matrix44::Identity();
+            //auto eye_view_matrix = openxr_session->GetTextureShiftMatrix(eye_index);
+            auto eye_view_matrix =
+                openxr_session->GetProjectionOnlyMatrix(eye_index, z_near, 1000.0f);
+            eye_view_matrix.UseFixedZ(-1.0f);
+            eye_view = eye_view_matrix;
+            //eye_view = Common::Matrix44::Identity();
+          }
+
           ++eye_index;
         }
       }

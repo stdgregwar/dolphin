@@ -417,8 +417,8 @@ void VertexShaderManager::SetConstants()
 
     if (xfmem.projection.type == GX_PERSPECTIVE)
     {
-      if (auto session = g_renderer->GetOpenXRSession())
-        corrected_matrix *= session->GetEyeViewMatrix(0, 0, 0);
+      //if (auto session = g_renderer->GetOpenXRSession())
+        //corrected_matrix *= session->GetEyeViewMatrix(0, 0, 0);
 
       if (g_ActiveConfig.bFreeLook)
         corrected_matrix *= g_freelook_camera.GetView();

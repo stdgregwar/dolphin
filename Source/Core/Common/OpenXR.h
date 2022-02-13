@@ -83,6 +83,14 @@ public:
   // 0:Left, 1:Right
   Common::Matrix44 GetEyeViewMatrix(int eye_index, float near, float far);
 
+  Common::Matrix44 GetEyeViewMatrixMove2DObjects(int eye_index, float z_near, float z_far);
+
+  Common::Matrix44 GetEyeViewOnlyMatrix(int eye_index);
+
+  Common::Matrix44 GetProjectionOnlyMatrix(int eye_index, float z_near, float z_far);
+
+  Common::Matrix44 GetTextureShiftMatrix(int eye_index);
+
   XrSessionState GetState() const;
 
 private:
@@ -109,6 +117,7 @@ private:
   XrExtent2Di m_swapchain_size;
 
   XrSpace m_local_space = XR_NULL_HANDLE;
+  XrSpace m_view_space = XR_NULL_HANDLE;
   bool m_is_headless_session = false;
 
   std::atomic<bool> m_run_wait_frame_thread;

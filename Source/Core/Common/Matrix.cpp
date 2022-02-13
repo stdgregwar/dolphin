@@ -209,6 +209,35 @@ Matrix44 Matrix44::Translate(const Vec3& vec)
   return mtx;
 }
 
+Matrix44 Matrix44::ForceZ(const float z)
+{
+  Matrix44 mtx = Matrix44::Identity();
+  mtx.data[10] = 0.0f;
+  mtx.data[11] = z;
+  return mtx;
+}
+
+void Matrix44::UseFixedZ(const float z)
+{
+  // Instead of using the incoming z in the matrix,
+  // use the argument.
+  // We accomplish this by moving some z column values into the w column and multiplying.
+  this->data[3] = z * this->data[2];
+  this->data[2] = 0.0f;
+  this->data[7] = z * this->data[6];
+  this->data[6] = 0.0f;
+  this->data[15] = z * this->data[14];
+  this->data[14] = 0.0f;
+  //this->data[15] = -this->data[14]; // Use z=-1 to avoid shrinking
+  //this->data[14] = 0.0f;
+}
+
+void Matrix44::ForceW(const float w)
+{
+  this->data[14] = 0.0f;
+  this->data[15] = w;
+}
+
 Matrix44 Matrix44::Shear(const float a, const float b)
 {
   Matrix44 mtx = Matrix44::Identity();
@@ -242,6 +271,7 @@ Matrix44 Matrix44::Frustum(float left, float right, float bottom, float top, flo
   mtx.data[14] = -1;
   return mtx;
 }
+
 
 void Matrix44::Multiply(const Matrix44& a, const Matrix44& b, Matrix44* result)
 {
