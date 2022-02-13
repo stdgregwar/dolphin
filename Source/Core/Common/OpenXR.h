@@ -83,6 +83,8 @@ public:
   // 0:Left, 1:Right
   Common::Matrix44 GetEyeViewMatrix(int eye_index, float near, float far);
 
+  Common::Matrix44 GetHeadMatrix();
+
   Common::Matrix44 GetEyeViewMatrixMove2DObjects(int eye_index, float z_near, float z_far);
 
   Common::Matrix44 GetEyeViewOnlyMatrix(int eye_index);
@@ -134,6 +136,7 @@ private:
   static constexpr uint32_t VIEW_COUNT = 2;
 
   std::array<XrView, VIEW_COUNT> m_eye_views = {};
+  XrSpaceLocation m_view_location = {XR_TYPE_SPACE_LOCATION};
 };
 
 std::unique_ptr<Session> CreateSession(const std::vector<std::string_view>& required_extensions,

@@ -64,6 +64,7 @@ void GeometryShaderManager::SetConstants()
 
         // We must "undo" the game's projection before applying our eye projections.
         const auto inv_projection = projection.Inverted();
+        //const auto inv_head_matrix = openxr_session->GetHeadMatrix().Inverted();
 
         // Use the game's near and far values.
         const float z_near = projection.data[11] / (projection.data[10] - 1);
@@ -77,8 +78,11 @@ void GeometryShaderManager::SetConstants()
         for (auto& eye_view : constants.eye_views)
         {
           if (xfmem.projection.type == GX_PERSPECTIVE)
-            eye_view = openxr_session->GetEyeViewMatrix(eye_index, z_near, z_far) * inv_projection;
-            ///eye_view = projection * openxr_session->GetEyeViewOnlyMatrix(eye_index) * inv_projection;
+            eye_view = openxr_session->GetEyeViewMatrix(eye_index, z_near, z_far) *
+            inv_projection;
+            //eye_view = projection * openxr_session->GetEyeViewOnlyMatrix(eye_index) *
+            //inv_projection;
+            //eye_view = Common::Matrix44::Identity();
           else
           {
             // eye_view =  openxr_session->GetEyeViewOnlyMatrix(eye_index);

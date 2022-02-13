@@ -663,6 +663,32 @@ Common::Matrix44 Session::GetEyeViewMatrix(int eye_index, float z_near, float z_
   //return view_matrix;
 }
 
+Common::Matrix44 Session::GetHeadMatrix()
+{
+  using Common::Matrix33;
+  using Common::Matrix44;
+
+  UpdateValuesIfDirty();
+
+  // TODO: Make this per-game configurable.
+  if (!(m_view_location.locationFlags & XR_SPACE_LOCATION_POSITION_VALID_BIT) ||
+      !(m_view_location.locationFlags & XR_SPACE_LOCATION_ORIENTATION_VALID_BIT))
+  {
+    return Matrix44::Identity();
+  }
+  // TODO: Make this per-game configurable.
+  const float units_per_meter = 100;
+
+  const auto& pos = m_view_location.pose.position;
+  const auto& rot = m_view_location.pose.orientation;
+
+  const auto view_matrix =
+      Matrix44::FromMatrix33(Matrix33::FromQuaternion(rot.x, rot.y, rot.z, rot.w)).Inverted() *
+      Matrix44::Translate(Common::Vec3{pos.x, pos.y, pos.z} * units_per_meter);
+
+  return view_matrix;
+}
+
 Common::Matrix44 Session::GetEyeViewMatrixMove2DObjects(int eye_index, float z_near, float z_far)
 {
   using Common::Matrix33;
@@ -758,7 +784,7 @@ Common::Matrix44 Session::GetTextureShiftMatrix(int eye_index)
 
 bool Session::AreValuesDirty() const
 {
-  return true;
+  return m_eye_views[0].type != XR_TYPE_VIEW;
 }
 
 void Session::MarkValuesDirty()
@@ -810,6 +836,12 @@ void Session::UpdateValuesIfDirty()
 
       for (auto& view : m_eye_views)
         view.pose.position = IDENTITY_POSITION;
+    }
+
+    result = xrLocateSpace(m_view_space, m_local_space, m_display_time, &m_view_location);
+    if (XR_FAILED(result))
+    {
+      ERROR_LOG(VIDEO, "OpenXR: xrLocateSpace: %d", result);
     }
   }
   else
