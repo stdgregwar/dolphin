@@ -414,6 +414,7 @@ void VertexShaderManager::SetConstants()
              rawProjection[3], rawProjection[4], rawProjection[5]);
 
     auto corrected_matrix = s_viewportCorrection * Common::Matrix44::FromArray(g_fProjectionMatrix);
+    auto corrected_matrix_right = corrected_matrix;
 
     if (xfmem.projection.type == GX_PERSPECTIVE)
     {
@@ -431,6 +432,8 @@ void VertexShaderManager::SetConstants()
         //corrected_matrix *= session->GetHeadMatrix();
         session->ModifyProjectionMatrix(xfmem.projection.type, &corrected_matrix, 0);
         corrected_matrix *= session->GetEyeViewOnlyMatrix(0);
+        session->ModifyProjectionMatrix(xfmem.projection.type, &corrected_matrix_right, 1);
+        corrected_matrix_right *= session->GetEyeViewOnlyMatrix(1);
       }
 
 
@@ -439,6 +442,7 @@ void VertexShaderManager::SetConstants()
     }
 
     memcpy(constants.projection.data(), corrected_matrix.data.data(), 4 * sizeof(float4));
+    memcpy(constants.projection_right.data(), corrected_matrix_right.data.data(), 4 * sizeof(float4));
 
     dirty = true;
   }

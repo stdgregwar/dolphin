@@ -17,7 +17,7 @@ ShaderHostConfig ShaderHostConfig::GetCurrent()
   bits.msaa = g_ActiveConfig.iMultisamples > 1;
   bits.ssaa = g_ActiveConfig.iMultisamples > 1 && g_ActiveConfig.bSSAA &&
               g_ActiveConfig.backend_info.bSupportsSSAA;
-  bits.stereo = g_ActiveConfig.stereo_mode != StereoMode::Off;
+  bits.stereo = g_ActiveConfig.stereo_mode != StereoMode::Off && g_ActiveConfig.stereo_mode != StereoMode::OpenXR;
   bits.wireframe = g_ActiveConfig.bWireFrame;
   bits.per_pixel_lighting = g_ActiveConfig.bEnablePixelLighting;
   bits.vertex_rounding = g_ActiveConfig.UseVertexRounding();
@@ -39,6 +39,7 @@ ShaderHostConfig ShaderHostConfig::GetCurrent()
   bits.backend_shader_framebuffer_fetch = g_ActiveConfig.backend_info.bSupportsFramebufferFetch;
   bits.backend_logic_op = g_ActiveConfig.backend_info.bSupportsLogicOp;
   bits.backend_palette_conversion = g_ActiveConfig.backend_info.bSupportsPaletteConversion;
+  bits.instanced_stereo = g_ActiveConfig.stereo_mode == StereoMode::OpenXR;
   return bits;
 }
 
