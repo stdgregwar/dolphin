@@ -418,8 +418,21 @@ void VertexShaderManager::SetConstants()
     if (xfmem.projection.type == GX_PERSPECTIVE)
     {
       if (auto session = g_renderer->GetOpenXRSession())
+      {
         // corrected_matrix *= session->GetEyeViewMatrix(0, 0, 0);
-        corrected_matrix *= session->GetHeadMatrix();
+        //float left = (corrected_matrix * Common::Vec4{-1.0f, 0.0f, -1.0f, 1.0f}).x;
+        //float right = (corrected_matrix * Common::Vec4{1.0f, 0.0f, -1.0f, 1.0f}).x;
+        //float up = (corrected_matrix * Common::Vec4{0.0f, 1.0f, -1.0f, 1.0f}).y;
+        //float down = (corrected_matrix * Common::Vec4{0.0f, -1.0f, -1.0f, 1.0f}).y;
+        //float z = (corrected_matrix * Common::Vec4{0.0f, 0.0f, -1.0f, 1.0f}).z;
+        //session->Set3DScreenSize(5.0f * (right - left), 5.0f *(up - down));
+        //session->Set3DScreenZ(z/5.0f);
+        //corrected_matrix = corrected_matrix * session->GetEyeViewOnlyMatrix(0);
+        //corrected_matrix *= session->GetHeadMatrix();
+        session->ModifyProjectionMatrix(xfmem.projection.type, &corrected_matrix, 0);
+        corrected_matrix *= session->GetEyeViewOnlyMatrix(0);
+      }
+
 
       if (g_ActiveConfig.bFreeLook)
         corrected_matrix *= g_freelook_camera.GetView();

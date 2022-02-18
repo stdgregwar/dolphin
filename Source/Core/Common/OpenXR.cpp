@@ -18,6 +18,7 @@
 #include "Common/MathUtil.h"
 #include "Common/Matrix.h"
 #include "Common/Thread.h"
+#include <VideoCommon/XFMemory.h>
 
 namespace OpenXR
 {
@@ -476,15 +477,16 @@ bool Session::EndFrame()
   //quad_layer_left.space = m_view_space;
   //quad_layer_left.eyeVisibility = XR_EYE_VISIBILITY_LEFT;
   //quad_layer_left.subImage = projection_views[0].subImage;
-  //quad_layer_left.pose = XrPosef{XrQuaternionf{0.0f, 0.0f, 0.f, 1.0f}, XrVector3f{0.0f, 0.0f, -1.0f}};
-  //quad_layer_left.size = XrExtent2Df{1.0f, 1.0f};
+  //quad_layer_left.pose = XrPosef{XrQuaternionf{0.0f, 0.0f, 0.f, 1.0f}, XrVector3f{0.0f, 0.0f, m_3d_screen_z}};
+  //quad_layer_left.size = XrExtent2Df{m_3d_screen_width, m_3d_screen_height};
 
   //XrCompositionLayerQuad quad_layer_right{XR_TYPE_COMPOSITION_LAYER_QUAD};
   //quad_layer_right.space = m_view_space;
   //quad_layer_right.eyeVisibility = XR_EYE_VISIBILITY_RIGHT;
   //quad_layer_right.subImage = projection_views[1].subImage;
-  //quad_layer_right.pose = XrPosef{XrQuaternionf{0.0f, 0.0f, 0.f, 1.0f}, XrVector3f{0.0f, 0.0f, -1.0f}};
-  //quad_layer_right.size = XrExtent2Df{1.0f, 1.0f};
+  //quad_layer_right.pose =
+  //    XrPosef{XrQuaternionf{0.0f, 0.0f, 0.f, 1.0f}, XrVector3f{0.0f, 0.0f, m_3d_screen_z}};
+  //quad_layer_right.size = XrExtent2Df{m_3d_screen_width, m_3d_screen_height};
   
 
   //const XrCompositionLayerBaseHeader* const layers[] = {
@@ -633,6 +635,17 @@ XrExtent2Di Session::GetSwapchainSize() const
   return m_swapchain_size;
 }
 
+void Session::Set3DScreenSize(float width, float height)
+{
+  m_3d_screen_width = width;
+  m_3d_screen_height = height;
+}
+
+void Session::Set3DScreenZ(float z)
+{
+  m_3d_screen_z = z;
+}
+
 Common::Matrix44 Session::GetEyeViewMatrix(int eye_index, float z_near, float z_far)
 {
   using Common::Matrix33;
@@ -649,8 +662,8 @@ Common::Matrix44 Session::GetEyeViewMatrix(int eye_index, float z_near, float z_
   const auto& rot = view.pose.orientation;
 
   const auto view_matrix =
-      Matrix44::FromMatrix33(Matrix33::FromQuaternion(rot.x, rot.y, rot.z, rot.w)).Inverted() *
-      Matrix44::Translate(Common::Vec3{pos.x, pos.y, pos.z} * units_per_meter);
+      Matrix44::Translate(Common::Vec3{pos.x, pos.y, pos.z} * units_per_meter) *
+      Matrix44::FromMatrix33(Matrix33::FromQuaternion(rot.x, rot.y, rot.z, rot.w));
 
   const auto& fov = view.fov;
 
@@ -659,7 +672,7 @@ Common::Matrix44 Session::GetEyeViewMatrix(int eye_index, float z_near, float z_
   float bottom = std::tan(fov.angleDown) * z_near;
   float top = std::tan(fov.angleUp) * z_near;
 
-  return Matrix44::Frustum(left, right, bottom, top, z_near, z_far) * view_matrix;
+  return Matrix44::FrustumD3D(left, right, bottom, top, z_near, z_far) * view_matrix.Inverted();
   //return view_matrix;
 }
 
@@ -683,10 +696,10 @@ Common::Matrix44 Session::GetHeadMatrix()
   const auto& rot = m_view_location.pose.orientation;
 
   const auto view_matrix =
-      Matrix44::FromMatrix33(Matrix33::FromQuaternion(rot.x, rot.y, rot.z, rot.w)).Inverted() *
-      Matrix44::Translate(Common::Vec3{pos.x, pos.y, pos.z} * units_per_meter);
+      Matrix44::Translate(Common::Vec3{pos.x, pos.y, pos.z} * units_per_meter) *
+      Matrix44::FromMatrix33(Matrix33::FromQuaternion(rot.x, rot.y, rot.z, rot.w));
 
-  return view_matrix;
+  return view_matrix.Inverted();
 }
 
 Common::Matrix44 Session::GetEyeViewMatrixMove2DObjects(int eye_index, float z_near, float z_far)
@@ -705,7 +718,7 @@ Common::Matrix44 Session::GetEyeViewMatrixMove2DObjects(int eye_index, float z_n
   const auto& rot = view.pose.orientation;
 
   const auto view_matrix =
-      Matrix44::FromMatrix33(Matrix33::FromQuaternion(rot.x, rot.y, rot.z, rot.w)).Inverted() *
+      Matrix44::FromMatrix33(Matrix33::FromQuaternion(rot.x, rot.y, rot.z, rot.w)) *
       Matrix44::Translate(Common::Vec3{pos.x, pos.y, pos.z} * units_per_meter) *
       Matrix44::Translate(Common::Vec3{0.0f, 0.0f, -z_far + z_near - 1.0f});
 
@@ -716,7 +729,7 @@ Common::Matrix44 Session::GetEyeViewMatrixMove2DObjects(int eye_index, float z_n
   float bottom = std::tan(fov.angleDown) * z_near;
   float top = std::tan(fov.angleUp) * z_near;
 
-  return Matrix44::Frustum(left, right, bottom, top, z_near, z_far) * view_matrix;
+  return Matrix44::Frustum(left, right, bottom, top, z_near, z_far) * view_matrix.Inverted();
 }
 
 Common::Matrix44 Session::GetEyeViewOnlyMatrix(int eye_index)
@@ -727,7 +740,7 @@ Common::Matrix44 Session::GetEyeViewOnlyMatrix(int eye_index)
   UpdateValuesIfDirty();
 
   // TODO: Make this per-game configurable.
-  const float units_per_meter = 100.0f;
+  const float units_per_meter = 1000.0f;
 
   auto& view = m_eye_views[eye_index];
 
@@ -735,10 +748,10 @@ Common::Matrix44 Session::GetEyeViewOnlyMatrix(int eye_index)
   const auto& rot = view.pose.orientation;
 
   const auto view_matrix =
-      Matrix44::FromMatrix33(Matrix33::FromQuaternion(rot.x, rot.y, rot.z, rot.w)).Inverted() *
-      Matrix44::Translate(Common::Vec3{pos.x, pos.y, pos.z} * units_per_meter);
+      Matrix44::Translate(Common::Vec3{pos.x, pos.y, pos.z} * units_per_meter) *
+      Matrix44::FromMatrix33(Matrix33::FromQuaternion(rot.x, rot.y, rot.z, rot.w));
 
-  return  view_matrix;
+  return  view_matrix.Inverted();
 }
 
 Common::Matrix44 Session::GetProjectionOnlyMatrix(int eye_index, float z_near, float z_far)
@@ -759,7 +772,45 @@ Common::Matrix44 Session::GetProjectionOnlyMatrix(int eye_index, float z_near, f
   float bottom = std::tan(fov.angleDown) * z_near;
   float top = std::tan(fov.angleUp) * z_near;
 
-  return Matrix44::Frustum(left, right, bottom, top, z_near, z_far);
+  return Matrix44::FrustumD3D(left, right, bottom, top, z_near, z_far);
+}
+
+void Session::ModifyProjectionMatrix(u32 projtype, Common::Matrix44 *proj, int eye_index)
+{
+  using Common::Matrix33;
+  using Common::Matrix44;
+
+  UpdateValuesIfDirty();
+
+  auto& view = m_eye_views[eye_index];
+
+  const auto& fov = view.fov;
+
+  float left = std::tan(fov.angleLeft);
+  float right = std::tan(fov.angleRight);
+  float bottom = std::tan(fov.angleDown);
+  float top = std::tan(fov.angleUp);
+  float width = right - left;
+  float height = top - bottom;
+
+  proj->data[0] = 2.0f / width;
+  if (projtype == GX_PERSPECTIVE)
+  {
+    proj->data[2] = (right + left) / width;
+  }
+  else
+  {
+    proj->data[3] = -(right + left) / width;
+  }
+  proj->data[5] = 2.0f / height;
+  if (projtype == GX_PERSPECTIVE)
+  {
+    proj->data[6] = (top + bottom) / height;
+  }
+  else
+  {
+    proj->data[7] = -(top + bottom) / height;
+  }
 }
 
 Common::Matrix44 Session::GetTextureShiftMatrix(int eye_index)

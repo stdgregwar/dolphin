@@ -91,9 +91,15 @@ public:
 
   Common::Matrix44 GetProjectionOnlyMatrix(int eye_index, float z_near, float z_far);
 
+  void ModifyProjectionMatrix(u32 projtype, Common::Matrix44* proj, int eye_index);
+
   Common::Matrix44 GetTextureShiftMatrix(int eye_index);
 
   XrSessionState GetState() const;
+
+  void Set3DScreenSize(float width, float height);
+
+  void Set3DScreenZ(float z);
 
 private:
   // Updates predicted display time and eye matrices.
@@ -137,6 +143,10 @@ private:
 
   std::array<XrView, VIEW_COUNT> m_eye_views = {};
   XrSpaceLocation m_view_location = {XR_TYPE_SPACE_LOCATION};
+
+  float m_3d_screen_width;
+  float m_3d_screen_height;
+  float m_3d_screen_z;
 };
 
 std::unique_ptr<Session> CreateSession(const std::vector<std::string_view>& required_extensions,
