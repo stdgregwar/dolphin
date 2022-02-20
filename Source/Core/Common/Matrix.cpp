@@ -202,6 +202,16 @@ Matrix44 Matrix44::FromArray(const std::array<float, 16>& arr)
   return mtx;
 }
 
+Matrix44 Matrix44::Scale(const Vec3& vec)
+{
+  Matrix44 mtx = {};
+  mtx.data[0] = vec.x;
+  mtx.data[5] = vec.y;
+  mtx.data[10] = vec.z;
+  mtx.data[15] = 1.0f;
+  return mtx;
+}
+
 Matrix44 Matrix44::Translate(const Vec3& vec)
 {
   Matrix44 mtx = Matrix44::Identity();

@@ -91,6 +91,9 @@ public:
 
   Common::Matrix44 GetProjectionOnlyMatrix(int eye_index, float z_near, float z_far);
 
+  void GetProjectionBounds(int eye_index, float* angleLeft, float* angleRight, float* angleUp,
+                           float* angleDown);
+
   void ModifyProjectionMatrix(u32 projtype, Common::Matrix44* proj, int eye_index);
 
   Common::Matrix44 GetTextureShiftMatrix(int eye_index);

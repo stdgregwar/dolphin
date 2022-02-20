@@ -227,6 +227,9 @@ ShaderCode GenerateGeometryShaderCode(APIType ApiType, const ShaderHostConfig& h
     out.Write("\tVS_OUTPUT f = o[i];\n");
   }
 
+  if (instanced_stereo)
+    out.Write("\tps.layer = o.rendertargetarrayindex;\n");
+
   if (stereo && !instanced_stereo)
   {
     // Select the output layer

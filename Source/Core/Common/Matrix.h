@@ -370,6 +370,8 @@ public:
   static Matrix44 FromMatrix33(const Matrix33& m33);
   static Matrix44 FromArray(const std::array<float, 16>& arr);
 
+  static Matrix44 Scale(const Vec3& vec);
+
   static Matrix44 Translate(const Vec3& vec);
   static Matrix44 ForceZ(const float z);
   void UseFixedZ(const float z);

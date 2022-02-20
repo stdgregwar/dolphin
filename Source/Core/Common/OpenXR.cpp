@@ -775,6 +775,26 @@ Common::Matrix44 Session::GetProjectionOnlyMatrix(int eye_index, float z_near, f
   return Matrix44::FrustumD3D(left, right, bottom, top, z_near, z_far);
 }
 
+float sign(float x)
+{
+  if (x < 0.0f)
+    return -1.0f;
+  else
+    return 1.0f;
+}
+
+void Session::GetProjectionBounds(int eye_index, float *angleLeft, float *angleRight, float *angleUp,
+                                  float *angleDown)
+{
+  UpdateValuesIfDirty();
+
+  const auto& fov = m_eye_views[eye_index].fov;
+  *angleLeft = fov.angleLeft;
+  *angleRight = fov.angleRight;
+  *angleUp = fov.angleUp;
+  *angleDown = fov.angleDown;
+}
+
 void Session::ModifyProjectionMatrix(u32 projtype, Common::Matrix44 *proj, int eye_index)
 {
   using Common::Matrix33;
@@ -793,23 +813,20 @@ void Session::ModifyProjectionMatrix(u32 projtype, Common::Matrix44 *proj, int e
   float width = right - left;
   float height = top - bottom;
 
-  proj->data[0] = 2.0f / width;
   if (projtype == GX_PERSPECTIVE)
   {
+    proj->data[0] = 2.0f / width;
     proj->data[2] = (right + left) / width;
-  }
-  else
-  {
-    proj->data[3] = -(right + left) / width;
-  }
-  proj->data[5] = 2.0f / height;
-  if (projtype == GX_PERSPECTIVE)
-  {
+    proj->data[5] =  2.0f / height;
     proj->data[6] = (top + bottom) / height;
   }
   else
   {
-    proj->data[7] = -(top + bottom) / height;
+    *proj = 
+            Matrix44::Translate(Common::Vec3{-(right + left) / (right - left),
+                                             -(top + bottom) / (top - bottom), 0.0}) *
+            Matrix44::Scale(Common::Vec3{2.0f / (right - left), 2.0f / (top - bottom), 1.0f}) *
+            *proj;
   }
 
   //Matrix44 shiftmatrix = Matrix44::Identity();
@@ -834,7 +851,8 @@ Common::Matrix44 Session::GetTextureShiftMatrix(int eye_index)
   float bottom = std::tan(fov.angleDown);
   float top = std::tan(fov.angleUp);
 
-  Matrix44 result = Matrix44::Translate(Common::Vec3{-(right + left) / (right - left), -(top + bottom)/(top - bottom), 0.0});
+  //Matrix44 result = Matrix44::Scale(Common::Vec3{2.0f/(right - left), 2.0f/(top - bottom), 1.0f}) * Matrix44::Translate(Common::Vec3{-(right + left) / (right - left), -(top + bottom)/(top - bottom), 0.0});
+  Matrix44 result = Matrix44::Translate( Common::Vec3{-(right + left) / (right - left), -(top + bottom) / (top - bottom), 0.0});
   return result;
 }
 
