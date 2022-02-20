@@ -244,7 +244,12 @@ ShaderCode GenerateVertexShaderCode(APIType api_type, const ShaderHostConfig& ho
     out.Write("o.pos = float4(dot(" I_PROJECTION_RIGHT "[0], pos), dot(" I_PROJECTION_RIGHT
               "[1], pos), dot(" I_PROJECTION_RIGHT "[2], pos), dot(" I_PROJECTION_RIGHT "[3], pos));\n");
     out.Write("}\n");
+    out.Write("o.rendertargetarrayindex = instanceid;\n");
   }
+  //if (host_config.instanced_stereo)
+  //{
+    //out.Write("if(instanceid==0) { o.pos.x = 0.5 * o.pos.x - 0.5 * o.pos.w; } else { o.pos.x = 0.5 * o.pos.x + 0.5 * o.pos.w; }\n");
+  //}
 
   out.Write("int4 lacc;\n"
             "float3 ldir, h, cosAttn, distAttn;\n"
@@ -537,10 +542,6 @@ ShaderCode GenerateVertexShaderCode(APIType api_type, const ShaderHostConfig& ho
   }
   else  // D3D
   {
-    if (host_config.instanced_stereo)
-    {
-      out.Write("if(instanceid==0) { o.pos.x = 0.5 * o.pos.x - 0.5 * o.pos.w; } else { o.pos.x = 0.5 * o.pos.x + 0.5 * o.pos.w; }\n");
-    }
     out.Write("return o;\n");
   }
   out.Write("}\n");

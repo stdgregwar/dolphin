@@ -811,6 +811,11 @@ void Session::ModifyProjectionMatrix(u32 projtype, Common::Matrix44 *proj, int e
   {
     proj->data[7] = -(top + bottom) / height;
   }
+
+  //Matrix44 shiftmatrix = Matrix44::Identity();
+  //shiftmatrix.data[0] = 0.5f;
+  //shiftmatrix.data[3] = eye_index == 0 ? -0.5f : 0.5f;
+  //*proj = shiftmatrix * *proj;
 }
 
 Common::Matrix44 Session::GetTextureShiftMatrix(int eye_index)

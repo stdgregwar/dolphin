@@ -51,6 +51,7 @@ ShaderCode GenerateGeometryShaderCode(APIType ApiType, const ShaderHostConfig& h
   const bool msaa = host_config.msaa;
   const bool ssaa = host_config.ssaa;
   const bool stereo = host_config.stereo;
+  const bool instanced_stereo = host_config.instanced_stereo;
   const PrimitiveType primitive_type = static_cast<PrimitiveType>(uid_data->primitive_type);
   const unsigned primitive_type_index = static_cast<unsigned>(uid_data->primitive_type);
   const unsigned vertex_in = std::min(static_cast<unsigned>(primitive_type_index) + 1, 3u);
@@ -192,7 +193,7 @@ ShaderCode GenerateGeometryShaderCode(APIType ApiType, const ShaderHostConfig& h
               ".x, -" I_LINEPTPARAMS ".w / " I_LINEPTPARAMS ".y) * center.pos.w;\n");
   }
 
-  if (stereo)
+  if (stereo && !instanced_stereo)
   {
     // If the GPU supports invocation we don't need a for loop and can simply use the
     // invocation identifier to determine which layer we're rendering.
@@ -226,7 +227,7 @@ ShaderCode GenerateGeometryShaderCode(APIType ApiType, const ShaderHostConfig& h
     out.Write("\tVS_OUTPUT f = o[i];\n");
   }
 
-  if (stereo)
+  if (stereo && !instanced_stereo)
   {
     // Select the output layer
     out.Write("\tps.layer = eye;\n");
@@ -309,7 +310,7 @@ ShaderCode GenerateGeometryShaderCode(APIType ApiType, const ShaderHostConfig& h
 
   EndPrimitive(out, host_config, uid_data, ApiType, wireframe);
 
-  if (stereo && !host_config.backend_gs_instancing)
+  if (stereo && !instanced_stereo && !host_config.backend_gs_instancing)
     out.Write("\t}\n");
 
   out.Write("}\n");
