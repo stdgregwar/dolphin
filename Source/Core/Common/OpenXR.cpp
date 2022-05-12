@@ -37,6 +37,7 @@ static std::vector<const char*> s_enabled_extensions;
 
 static std::atomic<bool> s_run_event_thread;
 static std::thread s_event_thread;
+static std::mutex s_event_mutex;
 
 XrInstance GetInstance()
 {
@@ -76,7 +77,11 @@ void EventThreadFunc()
   while (s_run_event_thread)
   {
     XrEventDataBuffer buffer{XR_TYPE_EVENT_DATA_BUFFER};
-    XrResult result = xrPollEvent(s_instance, &buffer);
+    XrResult result;
+    {
+      std::lock_guard lk{s_event_mutex};
+      result = xrPollEvent(s_instance, &buffer);
+    }
 
     if (result == XR_EVENT_UNAVAILABLE)
     {
@@ -290,6 +295,7 @@ bool Session::Create(const std::vector<std::string_view>& required_extensions,
   session_create_info.next = graphics_binding;
 
   {
+    std::lock_guard lke{s_event_mutex};
     std::lock_guard lk{s_sessions_mutex};
 
     XrResult result = xrCreateSession(s_instance, &session_create_info, &m_session);

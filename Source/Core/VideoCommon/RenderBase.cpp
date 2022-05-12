@@ -358,6 +358,12 @@ Renderer::ConvertStereoRectangle(const MathUtil::Rectangle<int>& rc) const
     draw_rc.top += height / 4;
     draw_rc.bottom -= height / 4;
   }
+  else if (g_ActiveConfig.stereo_mode == StereoMode::OpenXR)
+  {
+    //int width = rc.right - rc.left;
+    //draw_rc.left += width / 8;
+    //draw_rc.right -= width / 8;
+  }
   else
   {
     int width = rc.right - rc.left;
@@ -374,6 +380,13 @@ Renderer::ConvertStereoRectangle(const MathUtil::Rectangle<int>& rc) const
     left_rc.bottom -= m_backbuffer_height / 4;
     right_rc.top += m_backbuffer_height / 4;
     right_rc.bottom += m_backbuffer_height / 4;
+  }
+  else if (g_ActiveConfig.stereo_mode == StereoMode::OpenXR)
+  {
+    left_rc.left -= m_backbuffer_width / 4;
+    left_rc.right -= m_backbuffer_width / 4;
+    right_rc.left += m_backbuffer_width / 4;
+    right_rc.right += m_backbuffer_width / 4;
   }
   else
   {
